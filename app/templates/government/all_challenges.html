@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}All Challenges Repository{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Statewide Challenges Repository</h2>
+        <p class="text-muted small mb-0">Complete master log of all community problems reported across all 24 districts of Jharkhand.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-light text-dark border p-2">{{ challenges|length }} Total Filtered Records</span>
+    </div>
+</div>
+
+<!-- Advanced Search and Filters -->
+<div class="content-card mb-4">
+    <div class="content-card-body py-3">
+        <form action="{{ url_for('government.all_challenges') }}" method="GET" class="row g-2">
+            <div class="col-md-3">
+                <input type="text" name="q" class="form-control-custom" placeholder="Search keyword, code, village..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for s in challenge_statuses %}
+                        <option value="{{ s }}" {% if selected_status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="domain" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Domains</option>
+                    {% for d in domains_list %}
+                        <option value="{{ d }}" {% if selected_domain == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="district" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Districts</option>
+                    {% for dst in jharkhand_districts %}
+                        <option value="{{ dst }}" {% if selected_district == dst %}selected{% endif %}>{{ dst }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="severity" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Severities</option>
+                    <option value="Critical" {% if selected_severity == 'Critical' %}selected{% endif %}>Critical</option>
+                    <option value="High" {% if selected_severity == 'High' %}selected{% endif %}>High</option>
+                    <option value="Medium" {% if selected_severity == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Low" {% if selected_severity == 'Low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <a href="{{ url_for('government.all_challenges') }}" class="btn btn-outline-secondary w-100 btn-sm py-2" title="Reset">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table View -->
+<div class="content-card">
+    <div class="content-card-body p-0">
+        {% if challenges %}
+            <div class="table-responsive-custom">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Title & Domain</th>
+                            <th>District & Block</th>
+                            <th>Affected</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Assigned Partner</th>
+                            <th>Date</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chal in challenges %}
+                            <tr>
+                                <td><span class="table-code-pill">{{ chal.code }}</span></td>
+                                <td>
+                                    <div class="fw-bold text-dark small mb-1">{{ chal.title }}</div>
+                                    <span class="jig-badge badge-domain" style="font-size: 0.68rem;">{{ chal.domain }}</span>
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-dark">{{ chal.district }}</div>
+                                    <div class="small text-muted" style="font-size: 0.72rem;">{{ chal.block or 'N/A' }}</div>
+                                </td>
+                                <td class="small fw-semibold text-dark">
+                                    {{ "{:,}".format(chal.people_affected) }}
+                                </td>
+                                <td>
+                                    <span class="jig-badge {{ chal.severity_badge_class }}">{{ chal.severity }}</span>
+                                </td>
+                                <td>
+                                    <span class="jig-badge {{ chal.status_badge_class }}">{{ chal.status }}</span>
+                                </td>
+                                <td>
+                                    {% if chal.assigned_university %}
+                                        <span class="badge bg-light text-dark border small"><i class="bi bi-mortarboard text-success me-1"></i> {{ chal.assigned_university.code }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted" style="font-size: 0.75rem;">
+                                    {{ chal.created_at|format_date }}
+                                </td>
+                                <td class="text-end">
+                                    {% if chal.status in ['Submitted', 'Under Review', 'Clarification Required'] %}
+                                        <a href="{{ url_for('government.validation_queue') }}" class="btn-jig-primary btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                                            Validate
+                                        </a>
+                                    {% elif chal.status == 'Validated' %}
+                                        <a href="{{ url_for('government.university_allocation') }}" class="btn btn-warning btn-sm py-1 px-2 fw-semibold" style="font-size: 0.75rem;">
+                                            Allocate
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('government.project_monitoring') }}" class="btn-jig-outline btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                                            Monitor
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-search fs-1 text-muted d-block mb-2"></i>
+                <div class="fw-bold text-dark">No challenges found</div>
+                <p class="text-muted small">Try broadening your search query or reset filters.</p>
+                <a href="{{ url_for('government.all_challenges') }}" class="btn-jig-light btn-sm">Reset Filters</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

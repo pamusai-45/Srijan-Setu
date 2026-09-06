@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Government Coordination Dashboard{% endblock %}
+
+{% block content %}
+<!-- 1. Authority Welcome Banner (Compact ~30% Reduced Height) -->
+<div class="hero-welcome-card gov-hero-compact">
+    <div class="row align-items-center">
+        <div class="col-lg-9">
+            <span class="badge bg-white-subtle text-white border border-white-subtle mb-2 px-3 py-1 text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.08em; background: rgba(255,255,255,0.12);">
+                <i class="bi bi-bank2 text-warning me-1"></i> PROPOSED STATE NODAL DASHBOARD
+            </span>
+            <h2>Government Coordination Dashboard</h2>
+            <p>
+                Validate community challenges, coordinate university assignments and monitor solution progress across Jharkhand.
+            </p>
+            <div class="d-flex flex-wrap gap-2 pt-1">
+                <a href="{{ url_for('government.validation_queue') }}" class="btn-jig-accent">
+                    <i class="bi bi-shield-check"></i> Review Validation Queue ({{ pending_validation }})
+                </a>
+                <a href="{{ url_for('government.university_allocation') }}" class="btn-jig-outline text-white border-white">
+                    <i class="bi bi-building-gear"></i> Allocate Universities ({{ validated_awaiting_allocation }})
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Six Dynamic Summary Cards Grid -->
+<!-- Layout: 6 columns on wide screens, 3x2 on medium, 2 on tablets, 1 on mobile -->
+<div class="row g-3 mb-4">
+    <!-- 1. Total Challenges -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Total Challenges</span>
+                <div class="stat-icon mint">
+                    <i class="bi bi-collection"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ total_challenges }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-geo-alt-fill text-success"></i>
+                {% if distinct_districts_count >= 24 %}
+                    All 24 districts
+                {% else %}
+                    Across {{ distinct_districts_count }} districts
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Pending Validation -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Pending Validation</span>
+                <div class="stat-icon warning">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ pending_validation }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-shield-exclamation text-warning"></i> Needs validation
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Validated – Awaiting Allocation -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Validated – Awaiting Allocation</span>
+                <div class="stat-icon mint">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ validated_awaiting_allocation }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-arrow-right-circle text-success"></i> Ready for allocation
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Assigned -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Assigned</span>
+                <div class="stat-icon forest">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ assigned }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-building-check text-primary"></i> With universities
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Active Projects -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Active Projects</span>
+                <div class="stat-icon forest">
+                    <i class="bi bi-cpu"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ active_projects }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-tools text-primary"></i> R&D & prototypes
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Completed -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Completed</span>
+                <div class="stat-icon mint">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ completed }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-trophy-fill text-success"></i> Handed over to state
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Three Animated Analytics Charts in One Responsive Row -->
+<!-- Three equal columns on large desktop, two plus one on medium, one per row on mobile -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Challenges by Domain (Doughnut Chart) -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="content-card h-100 mb-0">
+            <div class="content-card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="content-card-title mb-0">
+                        <i class="bi bi-pie-chart-fill text-success"></i> Challenges by Domain
+                    </h3>
+                    <span class="text-muted small">Distribution across focus domains</span>
+                </div>
+            </div>
+            <div class="content-card-body d-flex align-items-center justify-content-center" style="height: 280px; position: relative;">
+                <canvas id="domainChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Status Distribution (Vertical Bar Chart) -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="content-card h-100 mb-0">
+            <div class="content-card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="content-card-title mb-0">
+                        <i class="bi bi-bar-chart-fill text-success"></i> Status Distribution
+                    </h3>
+                    <span class="text-muted small">Challenges across workflow stages</span>
+                </div>
+            </div>
+            <div class="content-card-body" style="height: 280px; position: relative;">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Monthly Submissions (Smooth Line/Area Chart) -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="content-card h-100 mb-0">
+            <div class="content-card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="content-card-title mb-0">
+                        <i class="bi bi-graph-up text-success"></i> Monthly Submissions
+                    </h3>
+                    <span class="text-muted small">Submissions over the last 6 months</span>
+                </div>
+                <span class="badge {% if trend_direction == 'up' %}bg-success-subtle text-success border border-success-subtle{% elif trend_direction == 'down' %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-secondary-subtle text-secondary border border-secondary-subtle{% endif %} px-2 py-1" style="font-size: 0.72rem;">
+                    <i class="bi bi-arrow-{% if trend_direction == 'up' %}up-right{% elif trend_direction == 'down' %}down-right{% else %}right{% endif %}"></i> {{ trend_comparison }}
+                </span>
+            </div>
+            <div class="content-card-body" style="height: 280px; position: relative;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Action Required Section (Placed below restored charts) -->
+<div class="content-card mb-4">
+    <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="content-card-title mb-0">
+                <i class="bi bi-lightning-charge-fill text-warning"></i> Action Required
+            </h3>
+            <span class="text-muted small">Operational priorities requiring state nodal review and clearance</span>
+        </div>
+    </div>
+    <div class="content-card-body p-3">
+        <div class="row g-3">
+            <!-- 1. Awaiting Validation -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-amber">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle fw-semibold" style="font-size: 0.72rem;">Validation Queue</span>
+                            <span class="fs-4 fw-bold text-dark">{{ pending_validation }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Awaiting Validation</h5>
+                        <p class="text-muted small mb-3">Fresh citizen reports requiring dossier verification & categorization.</p>
+                    </div>
+                    <a href="{{ url_for('government.validation_queue') }}" class="btn btn-sm btn-jig-accent w-100">
+                        <i class="bi bi-shield-check me-1"></i> Review Queue ({{ pending_validation }}) &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2. Awaiting Allocation -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-green">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size: 0.72rem;">Allocation Ready</span>
+                            <span class="fs-4 fw-bold text-dark">{{ validated_awaiting_allocation }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Awaiting Allocation</h5>
+                        <p class="text-muted small mb-3">Verified challenges ready to be paired with academic R&D institutions.</p>
+                    </div>
+                    <a href="{{ url_for('government.university_allocation') }}" class="btn btn-sm btn-jig-primary w-100">
+                        <i class="bi bi-building-gear me-1"></i> Allocate Universities ({{ validated_awaiting_allocation }}) &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3. Overdue Milestones -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-red">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 0.72rem;">Milestone Alerts</span>
+                            <span class="fs-4 fw-bold text-danger">{{ overdue_projects_count }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Overdue Milestones</h5>
+                        <p class="text-muted small mb-3">Academic R&D projects with lapsed deadlines or deliverables pending.</p>
+                    </div>
+                    <a href="{{ url_for('government.project_monitoring', status='Active') }}" class="btn btn-sm btn-outline-danger w-100">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Inspect Overdue ({{ overdue_projects_count }}) &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. Clarifications -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-blue">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.72rem;">Clarification</span>
+                            <span class="fs-4 fw-bold text-dark">{{ clarification_count }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Clarifications</h5>
+                        <p class="text-muted small mb-3">Submissions flagged for additional ground info or query follow-ups.</p>
+                    </div>
+                    <a href="{{ url_for('government.all_challenges', status='Clarification Required') }}" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-chat-left-dots me-1"></i> View Requests ({{ clarification_count }}) &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Remaining Dashboard Section: Priority and Delay Alerts Compact Table -->
+<div class="content-card mb-4">
+    <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="content-card-title text-danger mb-0">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i> Priority and Delay Alerts
+            </h3>
+            <span class="text-muted small">Critical & high-priority challenges and active project milestones needing attention</span>
+        </div>
+        <span class="badge bg-danger">{{ priority_delay_alerts|length }} Active Alerts</span>
+    </div>
+    <div class="content-card-body p-0">
+        <div class="table-responsive-custom">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Challenge ID</th>
+                        <th>Title</th>
+                        <th style="width: 140px;">District</th>
+                        <th style="width: 150px;">Priority/Delay</th>
+                        <th style="width: 200px;">Current Owner</th>
+                        <th class="text-end" style="width: 130px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in priority_delay_alerts %}
+                        <tr>
+                            <td>
+                                <span class="table-code-pill fw-bold">{{ alert.code }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold small text-dark table-title-truncate" title="{{ alert.title }}">
+                                    {{ alert.title }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small fw-semibold text-dark">{{ alert.district }}</div>
+                            </td>
+                            <td>
+                                {% if alert.is_overdue %}
+                                    <span class="badge bg-danger text-white">
+                                        <i class="bi bi-clock-history me-1"></i> {{ alert.priority_delay }}
+                                    </span>
+                                {% elif alert.priority_delay == 'Critical' %}
+                                    <span class="jig-badge badge-severity-critical">CRITICAL</span>
+                                {% elif alert.priority_delay == 'High' %}
+                                    <span class="jig-badge badge-severity-high">HIGH</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">{{ alert.priority_delay }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="small text-muted table-owner-truncate" title="{{ alert.current_owner }}">
+                                    <i class="bi bi-building text-success me-1"></i> {{ alert.current_owner }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ alert.action_url }}" class="btn btn-sm btn-jig-outline py-1 px-2" style="font-size: 0.75rem;">
+                                    {{ alert.action_label }} &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">
+                                <i class="bi bi-check-circle text-success me-1"></i> No urgent priority alerts or project delays detected.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const domainLabels = {{ domain_labels|tojson }};
+        const domainValues = {{ domain_values|tojson }};
+        const statusLabels = {{ status_labels|tojson }};
+        const statusValues = {{ status_values|tojson }};
+        const trendLabels = {{ trend_labels|tojson }};
+        const trendValues = {{ trend_values|tojson }};
+
+        initGovernmentCharts(
+            domainLabels,
+            domainValues,
+            statusLabels,
+            statusValues,
+            trendLabels,
+            trendValues
+        );
+    });
+</script>
+{% endblock %}

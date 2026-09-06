@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}University Allocation{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <span class="jig-badge badge-status-assigned mb-1">SMART MATCHING ALGORITHM</span>
+        <h2 class="fw-bold text-dark mb-1">University R&D Allocation</h2>
+        <p class="text-muted small mb-0">Match validated community challenges with apex universities based on domain specialization, workload, and district proximity.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-white text-dark border p-2 shadow-sm">
+            <i class="bi bi-clock-history text-warning me-1"></i> {{ validated_challenges|length }} Challenges Awaiting Assignment
+        </span>
+    </div>
+</div>
+
+<!-- Validated Unassigned Challenges Section -->
+{% if validated_challenges %}
+    <div class="row g-4 mb-5">
+        {% for c in validated_challenges %}
+            <div class="col-12">
+                <div class="content-card">
+                    <div class="content-card-header bg-white">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="table-code-pill">{{ c.code }}</span>
+                            <span class="jig-badge badge-status-validated">VALIDATED</span>
+                            <span class="jig-badge {{ c.severity_badge_class }}">{{ c.severity }}</span>
+                            <span class="jig-badge badge-domain">{{ c.domain }}</span>
+                        </div>
+                        <span class="small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ c.district }}</span>
+                    </div>
+
+                    <div class="content-card-body">
+                        <div class="row g-4">
+                            <!-- Challenge Summary -->
+                            <div class="col-lg-5">
+                                <h4 class="fw-bold fs-5 text-dark mb-2">{{ c.title }}</h4>
+                                <p class="text-secondary small mb-3" style="line-height: 1.6;">{{ c.description }}</p>
+
+                                <div class="p-3 bg-light rounded small mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Target Block:</span>
+                                        <span class="fw-bold text-dark">{{ c.block or 'N/A' }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Affected Citizens:</span>
+                                        <span class="fw-bold text-dark">{{ "{:,}".format(c.people_affected) }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Target Duration:</span>
+                                        <span class="fw-bold text-dark">{{ c.duration_months }} Months</span>
+                                    </div>
+                                </div>
+
+                                {% if c.validation_notes %}
+                                    <div class="small p-2 bg-success-subtle text-success border border-success-subtle rounded">
+                                        <strong>Validation Note:</strong> {{ c.validation_notes }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Recommended Universities Match Column -->
+                            <div class="col-lg-7 border-start">
+                                <h5 class="fw-bold fs-6 text-dark mb-3 d-flex align-items-center justify-content-between">
+                                    <span><i class="bi bi-stars text-warning me-1"></i> Recommended Universities & Match Scores</span>
+                                    <small class="text-muted fw-normal" style="font-size: 0.72rem;">Ranked by AI algorithm</small>
+                                </h5>
+
+                                <form action="{{ url_for('government.allocate_university', challenge_id=c.id) }}" method="POST">
+                                    <div class="row g-2 mb-3">
+                                        {% for rec in recommendations[c.id][:3] %}
+                                            <div class="col-12">
+                                                <label class="w-100 p-2 border rounded d-flex align-items-center justify-content-between cursor-pointer hover-bg-light mb-0" style="cursor: pointer;">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <input type="radio" name="university_id" value="{{ rec.university.id }}" class="form-check-input mt-0" {% if loop.first %}checked{% endif %} required>
+                                                        <div>
+                                                            <div class="fw-bold small text-dark">{{ rec.university.name }}</div>
+                                                            <div class="small text-muted" style="font-size: 0.75rem;">
+                                                                <span class="text-dark fw-semibold">{{ rec.university.district }}</span> &bull; 
+                                                                Active Load: <span class="badge bg-light text-dark border">{{ rec.university.active_workload }} projects</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="match-score-pill">
+                                                            <i class="bi bi-bullseye text-success"></i> {{ rec.match_score }}% Match
+                                                        </span>
+                                                        <div class="small text-muted" style="font-size: 0.68rem;">Rating: {{ rec.university.rating }}/5.0</div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <!-- Direct University Dropdown (Option to assign any other institution) -->
+                                    <div class="mb-3">
+                                        <details class="small">
+                                            <summary class="text-muted cursor-pointer mb-2">Or select from other accredited Jharkhand universities &darr;</summary>
+                                            <select name="university_id_alt" class="form-select-custom form-select-sm" onchange="if(this.value){ document.querySelectorAll('input[name=university_id]').forEach(r=>r.checked=false); }">
+                                                <option value="">-- Choose other institution --</option>
+                                                {% for uni in universities %}
+                                                    <option value="{{ uni.id }}">{{ uni.name }} ({{ uni.district }}) - Workload: {{ uni.active_workload }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </details>
+                                    </div>
+
+                                    <!-- Allocation Directives & Notes -->
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Special Allocation Directives / Mandate</label>
+                                        <input type="text" name="notes" class="form-control-custom" placeholder="e.g. Prioritize field sampling before summer dry spell; focus on local tribal employment.">
+                                    </div>
+
+                                    <button type="submit" class="btn-jig-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2">
+                                        <i class="bi bi-building-add"></i> Confirm Official University Assignment
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="content-card text-center py-5 mb-5">
+        <i class="bi bi-award fs-1 text-success d-block mb-3"></i>
+        <h4 class="fw-bold text-dark">No Validated Challenges Waiting for Allocation</h4>
+        <p class="text-muted small mb-0">All currently validated challenges have been successfully paired with universities.</p>
+    </div>
+{% endif %}
+
+<!-- Assigned Challenges History Table -->
+<div class="content-card">
+    <div class="content-card-header">
+        <h3 class="content-card-title">
+            <i class="bi bi-check2-all text-success"></i> Active Academic Assignments
+        </h3>
+        <span class="badge bg-light text-dark border">{{ assigned_challenges|length }} Assigned</span>
+    </div>
+    <div class="content-card-body p-0">
+        <div class="table-responsive-custom">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Challenge Title</th>
+                        <th>Assigned University</th>
+                        <th>District</th>
+                        <th>Current Stage</th>
+                        <th>Latest Status</th>
+                        <th class="text-end">Monitoring</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ac in assigned_challenges %}
+                        <tr>
+                            <td><span class="table-code-pill">{{ ac.code }}</span></td>
+                            <td>
+                                <div class="fw-bold small text-dark">{{ ac.title }}</div>
+                                <span class="jig-badge badge-domain" style="font-size: 0.68rem;">{{ ac.domain }}</span>
+                            </td>
+                            <td>
+                                {% if ac.assigned_university %}
+                                    <div class="small fw-semibold text-dark">{{ ac.assigned_university.name }}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">{{ ac.assigned_university.code }}</div>
+                                {% else %}
+                                    <span class="text-muted small">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="small fw-semibold text-dark">{{ ac.district }}</td>
+                            <td>
+                                {% if ac.project %}
+                                    <span class="badge bg-success text-white small">{{ ac.project.stage }}</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border small">Workspace Initiation</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="jig-badge {{ ac.status_badge_class }}">{{ ac.status }}</span></td>
+                            <td class="text-end">
+                                <a href="{{ url_for('government.project_monitoring') }}" class="btn-jig-outline btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                                    Track R&D &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

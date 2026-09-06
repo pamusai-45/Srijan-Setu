@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Milestones Management - {{ university.code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <span class="jig-badge badge-domain mb-1">PROJECT TRACKING & ACCOUNTABILITY</span>
+        <h2 class="fw-bold text-dark mb-1">Milestones & Progress Control</h2>
+        <p class="text-muted small mb-0">Define quantitative deliverables, update execution status, and automate state progress reporting.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('university.active_projects') }}" class="btn-jig-outline">
+            <i class="bi bi-arrow-left"></i> Back to Projects
+        </a>
+    </div>
+</div>
+
+{% if projects %}
+    <!-- Project Selector Bar -->
+    <div class="content-card mb-4">
+        <div class="content-card-body py-3">
+            <div class="d-flex align-items-center gap-3">
+                <label class="form-label-custom mb-0 text-nowrap"><i class="bi bi-cpu-fill text-success me-1"></i> Active Project:</label>
+                <select class="form-select-custom" onchange="location.href='{{ url_for('university.milestones') }}?project_id=' + this.value">
+                    {% for p in projects %}
+                        <option value="{{ p.id }}" {% if selected_project and selected_project.id == p.id %}selected{% endif %}>
+                            {{ p.challenge.code }} - {{ p.title }} (Progress: {{ p.progress_percent }}%)
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    {% if selected_project %}
+        <!-- Progress Overview Banner -->
+        <div class="content-card mb-4 bg-white">
+            <div class="content-card-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h4 class="fw-bold fs-5 text-dark mb-0">{{ selected_project.title }}</h4>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ selected_project.stage }}</span>
+                        </div>
+                        <div class="small text-muted">
+                            <i class="bi bi-geo-alt text-danger"></i> {{ selected_project.challenge.district }} &bull; Challenge: {{ selected_project.challenge.title }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-dark">Automated Project Progress</span>
+                            <span class="fs-5 fw-bold text-success">{{ selected_project.progress_percent }}%</span>
+                        </div>
+                        <div class="progress-container" style="height: 10px;">
+                            <div class="progress-bar-fill" style="width: {{ selected_project.progress_percent }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Add New Milestone Form -->
+            <div class="col-lg-4">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="bi bi-flag-fill text-warning"></i> Add New Milestone
+                        </h3>
+                    </div>
+                    <div class="content-card-body">
+                        <form action="{{ url_for('university.milestones') }}" method="POST">
+                            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+
+                            <div class="mb-3">
+                                <label class="form-label-custom">Milestone Title *</label>
+                                <input type="text" name="title" class="form-control-custom" placeholder="e.g. Lab Scale Prototype Assembly" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-custom">Deliverable Item *</label>
+                                <input type="text" name="deliverable" class="form-control-custom" placeholder="e.g. Working Adsorption Column Skid" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-custom">Target Deadline *</label>
+                                <input type="date" name="deadline" class="form-control-custom" required>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label-custom">Description & Verification Criteria</label>
+                                <textarea name="description" class="form-control-custom" rows="3" placeholder="Specify testing protocols, community participation, or lab validation metrics..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-jig-primary w-100 py-2">
+                                <i class="bi bi-plus-lg"></i> Append Milestone to Plan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Milestones List -->
+            <div class="col-lg-8">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">
+                            <i class="bi bi-list-check text-success"></i> Project Milestones Timeline
+                        </h3>
+                        <span class="badge bg-light text-dark border">{{ selected_project.milestones.count() }} Planned Steps</span>
+                    </div>
+                    <div class="content-card-body">
+                        {% if selected_project.milestones.count() > 0 %}
+                            <div class="d-flex flex-column gap-3">
+                                {% for ms in selected_project.milestones.all() %}
+                                    <div class="border rounded p-3 bg-white shadow-sm">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                            <div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-dark text-white" style="font-size: 0.72rem;">#{{ ms.order_index }}</span>
+                                                    <h5 class="fw-bold text-dark fs-6 mb-0">{{ ms.title }}</h5>
+                                                </div>
+                                                <div class="text-muted small mt-1" style="font-size: 0.76rem;">
+                                                    <strong>Deliverable:</strong> {{ ms.deliverable }} &bull; 
+                                                    <span class="{% if ms.status == 'Completed' %}text-success{% else %}text-danger{% endif %}">
+                                                        <i class="bi bi-calendar-event me-1"></i> Due: {{ ms.deadline|format_date }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Status Update Form -->
+                                            <form action="{{ url_for('university.update_milestone', milestone_id=ms.id) }}" method="POST" class="d-flex align-items-center gap-2">
+                                                <select name="status" class="form-select-custom form-select-sm py-1" style="font-size: 0.78rem; width: auto;" onchange="this.form.submit()">
+                                                    <option value="Pending" {% if ms.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="In Progress" {% if ms.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                                    <option value="Completed" {% if ms.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                                </select>
+                                            </form>
+                                        </div>
+
+                                        {% if ms.description %}
+                                            <p class="text-secondary small mb-0 bg-light p-2 rounded" style="font-size: 0.78rem;">
+                                                {{ ms.description }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-flag fs-1 d-block mb-2"></i>
+                                <div class="fw-bold text-dark">No milestones added yet</div>
+                                <p class="small text-muted">Add deliverables on the left to set up the project implementation roadmap.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="content-card text-center py-5">
+        <i class="bi bi-flag fs-1 text-muted d-block mb-3"></i>
+        <h4 class="fw-bold text-dark">No Active Projects Available</h4>
+        <p class="text-muted small">Accept an assigned challenge to begin setting up technical milestones.</p>
+    </div>
+{% endif %}
+{% endblock %}

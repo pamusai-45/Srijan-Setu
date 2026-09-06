@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Government Validation Queue{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <span class="jig-badge badge-severity-high mb-1">AUTHORITY VERIFICATION DESK</span>
+        <h2 class="fw-bold text-dark mb-1">Challenge Validation Queue</h2>
+        <p class="text-muted small mb-0">Examine ground evidence, assign priority levels, and validate or reject community challenges.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-light text-dark border p-2 d-flex align-items-center gap-1">
+            <i class="bi bi-inbox-fill text-warning"></i> {{ queue|length }} Challenges Pending Action
+        </span>
+    </div>
+</div>
+
+{% if queue %}
+    <div class="row g-4">
+        {% for c in queue %}
+            <div class="col-12">
+                <div class="content-card mb-0">
+                    <div class="content-card-header bg-white">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="table-code-pill">{{ c.code }}</span>
+                            <span class="jig-badge {{ c.severity_badge_class }}">{{ c.severity }} Severity</span>
+                            <span class="jig-badge {{ c.status_badge_class }}">{{ c.status }}</span>
+                            <span class="jig-badge badge-domain">{{ c.domain }}</span>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-clock me-1"></i> Received {{ c.created_at|time_ago }}
+                        </div>
+                    </div>
+
+                    <div class="content-card-body">
+                        <div class="row g-4">
+                            <!-- Challenge Context Details -->
+                            <div class="col-lg-8">
+                                <h4 class="fw-bold text-dark fs-5 mb-2">{{ c.title }}</h4>
+                                <p class="text-secondary small mb-3" style="line-height: 1.6;">{{ c.description }}</p>
+
+                                <div class="row g-2 p-3 bg-light rounded small mb-3">
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block">District / Block:</span>
+                                        <span class="fw-bold text-dark">{{ c.district }} ({{ c.block or 'N/A' }})</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block">Village / City:</span>
+                                        <span class="fw-bold text-dark">{{ c.village_city or 'Urban ward' }}</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block">Affected Population:</span>
+                                        <span class="fw-bold text-dark">{{ "{:,}".format(c.people_affected) }} residents</span>
+                                    </div>
+                                    {% if c.gps_coords %}
+                                        <div class="col-12 mt-2 pt-2 border-top">
+                                            <span class="text-muted"><i class="bi bi-geo-alt text-danger me-1"></i> GPS Coordinates:</span>
+                                            <code class="text-dark">{{ c.gps_coords }}</code>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Evidence Attachments -->
+                                {% if c.media.count() > 0 %}
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="small fw-bold text-muted">Evidence:</span>
+                                        {% for m in c.media.all() %}
+                                            <a href="{{ url_for('static', filename='uploads/' + m.filename) }}" target="_blank" class="badge bg-white text-dark border p-2 text-decoration-none d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-file-earmark-arrow-up-fill text-success"></i> {{ m.original_name }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Authority Action Form Panel -->
+                            <div class="col-lg-4 border-start">
+                                <div class="p-2">
+                                    <h5 class="fw-bold fs-6 text-dark mb-3">
+                                        <i class="bi bi-pen-fill text-success me-1"></i> Authority Decision
+                                    </h5>
+
+                                    <form action="{{ url_for('government.validate_challenge', challenge_id=c.id) }}" method="POST">
+                                        <!-- Priority Assignment -->
+                                        <div class="mb-3">
+                                            <label class="form-label-custom">Confirm/Adjust Priority</label>
+                                            <select name="priority" class="form-select-custom">
+                                                <option value="Low" {% if c.priority == 'Low' %}selected{% endif %}>Low Priority</option>
+                                                <option value="Medium" {% if c.priority == 'Medium' %}selected{% endif %}>Medium Priority</option>
+                                                <option value="High" {% if c.priority == 'High' %}selected{% endif %}>High Priority</option>
+                                                <option value="Critical" {% if c.priority == 'Critical' %}selected{% endif %}>Critical Priority</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Assigned Sub-Category -->
+                                        <div class="mb-3">
+                                            <label class="form-label-custom">Categorization & Focus</label>
+                                            <input type="text" name="category" class="form-control-custom" value="{{ c.category_assigned or c.domain }}" placeholder="e.g. Groundwater Defluoridation">
+                                        </div>
+
+                                        <!-- Notes / Instructions -->
+                                        <div class="mb-3">
+                                            <label class="form-label-custom">Verification Notes / Remarks</label>
+                                            <textarea name="notes" class="form-control-custom" rows="2" placeholder="Document reasons for validation, required data, or rejection rationale...">{{ c.validation_notes or '' }}</textarea>
+                                        </div>
+
+                                        <!-- Three Action Buttons -->
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" name="action" value="validate" class="btn btn-success btn-sm py-2 fw-semibold d-flex align-items-center justify-content-center gap-1">
+                                                <i class="bi bi-check2-circle fs-6"></i> Validate & Queue for University
+                                            </button>
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" name="action" value="clarification" class="btn btn-outline-warning btn-sm w-50 py-1 fw-semibold">
+                                                    <i class="bi bi-question-circle"></i> Need Clarification
+                                                </button>
+                                                <button type="submit" name="action" value="reject" class="btn btn-outline-danger btn-sm w-50 py-1 fw-semibold" onclick="return confirm('Are you sure you want to reject this challenge?')">
+                                                    <i class="bi bi-x-circle"></i> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="content-card text-center py-5">
+        <i class="bi bi-check2-all fs-1 text-success d-block mb-3"></i>
+        <h4 class="fw-bold text-dark">Validation Queue is Clear!</h4>
+        <p class="text-muted small mb-3">All reported community challenges have been processed, categorized, and forwarded for university allocation.</p>
+        <a href="{{ url_for('government.university_allocation') }}" class="btn-jig-primary btn-sm">
+            <i class="bi bi-building-gear"></i> Proceed to University Allocation
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

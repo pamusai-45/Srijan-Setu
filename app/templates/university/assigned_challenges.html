@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Assigned Challenges - {{ university.code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <span class="jig-badge badge-status-assigned mb-1">GOVERNMENT ALLOCATIONS</span>
+        <h2 class="fw-bold text-dark mb-1">Institutional Challenge Queue</h2>
+        <p class="text-muted small mb-0">Review assignments delegated to {{ university.name }} by the State Innovation Directorate.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-white text-dark border p-2 shadow-sm">
+            <i class="bi bi-inbox-fill text-primary me-1"></i> {{ assignments|length }} Total Assigned Records
+        </span>
+    </div>
+</div>
+
+{% if assignments %}
+    <div class="row g-4">
+        {% for asgn in assignments %}
+            <div class="col-12">
+                <div class="content-card">
+                    <div class="content-card-header bg-white">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="table-code-pill">{{ asgn.challenge.code }}</span>
+                            <span class="jig-badge {{ asgn.challenge.severity_badge_class }}">{{ asgn.challenge.severity }} Priority</span>
+                            <span class="jig-badge badge-domain">{{ asgn.challenge.domain }}</span>
+                            <span class="badge {% if asgn.status == 'Accepted' %}bg-success-subtle text-success border border-success-subtle{% elif asgn.status == 'Assigned' %}bg-warning-subtle text-warning border border-warning-subtle{% else %}bg-light text-dark border{% endif %}">
+                                Status: {{ asgn.status }}
+                            </span>
+                        </div>
+                        <span class="small text-muted">
+                            <i class="bi bi-calendar-check me-1"></i> Assigned {{ asgn.assigned_at|format_date }}
+                        </span>
+                    </div>
+
+                    <div class="content-card-body">
+                        <div class="row g-4">
+                            <!-- Challenge Information -->
+                            <div class="col-lg-8">
+                                <h4 class="fw-bold fs-5 text-dark mb-2">{{ asgn.challenge.title }}</h4>
+                                <p class="text-secondary small mb-3" style="line-height: 1.6;">{{ asgn.challenge.description }}</p>
+
+                                <div class="row g-2 p-3 bg-light rounded small mb-3">
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block">District / Block:</span>
+                                        <span class="fw-bold text-dark">{{ asgn.challenge.district }} ({{ asgn.challenge.block or 'N/A' }})</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block">Affected Community:</span>
+                                        <span class="fw-bold text-dark">{{ "{:,}".format(asgn.challenge.people_affected) }} citizens</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block">Est. Duration:</span>
+                                        <span class="fw-bold text-dark">{{ asgn.challenge.duration_months }} Months</span>
+                                    </div>
+                                </div>
+
+                                <!-- Evidence Attachments -->
+                                {% if asgn.challenge.media.count() > 0 %}
+                                    <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                                        <span class="small fw-bold text-muted">Evidence Dossier:</span>
+                                        {% for m in asgn.challenge.media.all() %}
+                                            <a href="{{ url_for('static', filename='uploads/' + m.filename) }}" target="_blank" class="badge bg-white text-dark border p-2 text-decoration-none d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-file-earmark-check-fill text-success"></i> {{ m.original_name }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if asgn.notes %}
+                                    <div class="p-2 border rounded bg-light-subtle small text-dark">
+                                        <strong>Government Directive:</strong> {{ asgn.notes }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- University Action / Acceptance Column -->
+                            <div class="col-lg-4 border-start">
+                                <div class="p-2">
+                                    <h5 class="fw-bold fs-6 text-dark mb-3">
+                                        <i class="bi bi-shield-check text-success me-1"></i> Institutional Action
+                                    </h5>
+
+                                    {% if asgn.status == 'Assigned' %}
+                                        <form action="{{ url_for('university.respond_assignment', assignment_id=asgn.id) }}" method="POST">
+                                            <div class="mb-3">
+                                                <label class="form-label-custom">Acceptance / Collaboration Notes</label>
+                                                <textarea name="notes" class="form-control-custom" rows="3" placeholder="Confirm willingness to formulate solution, designate lead lab, or note initial inquiries..."></textarea>
+                                            </div>
+
+                                            <div class="d-grid gap-2">
+                                                <button type="submit" name="action" value="accept" class="btn btn-success py-2 fw-semibold d-flex align-items-center justify-content-center gap-2">
+                                                    <i class="bi bi-check-lg fs-5"></i> Accept & Initiate Project
+                                                </button>
+
+                                                <button type="button" class="btn btn-outline-warning btn-sm py-1 fw-semibold" data-bs-toggle="collapse" data-bs-target="#clarifyCollapse-{{ asgn.id }}">
+                                                    <i class="bi bi-question-circle"></i> Request Clarification
+                                                </button>
+
+                                                <button type="button" class="btn btn-outline-danger btn-sm py-1 fw-semibold" data-bs-toggle="collapse" data-bs-target="#declineCollapse-{{ asgn.id }}">
+                                                    <i class="bi bi-x-circle"></i> Decline Assignment
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <!-- Clarification Form Collapse -->
+                                        <div class="collapse mt-3" id="clarifyCollapse-{{ asgn.id }}">
+                                            <form action="{{ url_for('university.respond_assignment', assignment_id=asgn.id) }}" method="POST" class="p-2 border rounded bg-light">
+                                                <label class="form-label-custom text-warning">What technical details are needed?</label>
+                                                <textarea name="notes" class="form-control-custom mb-2" rows="2" placeholder="e.g. Need seasonal water flow rate or soil test parameters..." required></textarea>
+                                                <button type="submit" name="action" value="clarification" class="btn btn-warning btn-sm w-100 fw-semibold">
+                                                    Submit Clarification Request
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Decline Form Collapse -->
+                                        <div class="collapse mt-3" id="declineCollapse-{{ asgn.id }}">
+                                            <form action="{{ url_for('university.respond_assignment', assignment_id=asgn.id) }}" method="POST" class="p-2 border rounded bg-light">
+                                                <label class="form-label-custom text-danger">Reason for Declining</label>
+                                                <textarea name="decline_reason" class="form-control-custom mb-2" rows="2" placeholder="e.g. Specialized hydro-geological testing lab currently fully booked until Q3..." required></textarea>
+                                                <button type="submit" name="action" value="decline" class="btn btn-danger btn-sm w-100 fw-semibold">
+                                                    Confirm Decline to State Pool
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                    {% elif asgn.status == 'Accepted' %}
+                                        <div class="p-3 border border-success-subtle bg-success-subtle rounded text-center mb-3">
+                                            <i class="bi bi-check-circle-fill text-success fs-3 mb-2 d-block"></i>
+                                            <div class="fw-bold text-success small">Assignment Accepted</div>
+                                            <div class="text-muted small">Workspace and project framework are active.</div>
+                                        </div>
+
+                                        <div class="d-grid gap-2">
+                                            <a href="{{ url_for('university.proposals') }}" class="btn-jig-primary btn-sm py-2">
+                                                <i class="bi bi-file-earmark-text"></i> Submit Technical Proposal
+                                            </a>
+                                            <a href="{{ url_for('university.milestones') }}" class="btn-jig-outline btn-sm py-2">
+                                                <i class="bi bi-flag"></i> Manage Project Milestones
+                                            </a>
+                                        </div>
+                                    {% else %}
+                                        <div class="p-3 border rounded bg-light text-center small text-muted">
+                                            {{ asgn.status }}: {{ asgn.decline_reason or asgn.notes }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="content-card text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+        <h4 class="fw-bold text-dark">No Challenges Currently Assigned</h4>
+        <p class="text-muted small">You will be notified here as soon as the Government of Jharkhand pairs your institution with verified community challenges.</p>
+    </div>
+{% endif %}
+{% endblock %}

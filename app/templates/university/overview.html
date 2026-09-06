@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}University Portal — {{ university.name }}{% endblock %}
+
+{% block content %}
+<!-- 1. Compact University Welcome Banner (~30% Reduced Height) -->
+<div class="hero-welcome-card uni-hero-compact">
+    <div class="row align-items-center">
+        <div class="col-lg-9">
+            <span class="badge bg-white-subtle text-white border border-white-subtle mb-2 px-3 py-1 text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.08em; background: rgba(255,255,255,0.12);">
+                <i class="bi bi-mortarboard-fill text-warning me-1"></i> ACADEMIC R&D HUB &bull; {{ university.code }}
+            </span>
+            <h2>{{ university.name }}</h2>
+            <p>
+                Transform assigned community challenges into multidisciplinary research, prototypes and field-tested solutions.
+            </p>
+            <div class="d-flex flex-wrap gap-2 pt-1">
+                <a href="{{ url_for('university.assigned_challenges') }}" class="btn-jig-accent">
+                    <i class="bi bi-inbox-fill"></i> Review New Assignments ({{ new_assignments_count }})
+                </a>
+                <a href="{{ url_for('university.proposals') }}" class="btn-jig-outline text-white border-white">
+                    <i class="bi bi-file-earmark-plus"></i> Submit Technical Proposal
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Six Dynamic Summary Cards Grid -->
+<!-- Responsive Layout: 6 on wide screens, 3x2 on medium, 2 on tablets, 1 on mobile -->
+<div class="row g-3 mb-4">
+    <!-- 1. New Assignments (Amber) -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">New Assignments</span>
+                <div class="stat-icon warning">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ new_assignments_count }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-hourglass-split text-warning"></i> Needs response
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Accepted Challenges (Mint) -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Accepted Challenges</span>
+                <div class="stat-icon mint">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ accepted_challenges_count }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-arrow-right-circle text-success"></i> Projects initiated
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Active Projects (Forest Green) -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Active Projects</span>
+                <div class="stat-icon forest">
+                    <i class="bi bi-cpu"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ active_projects_count }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-tools text-primary"></i> Lab & Field R&D
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Proposals Under Review (Amber) -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Proposals Under Review</span>
+                <div class="stat-icon warning">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ proposals_under_review_count }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-clock text-warning"></i> State evaluation
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Pending Milestones (Amber) -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Pending Milestones</span>
+                <div class="stat-icon warning">
+                    <i class="bi bi-flag"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ pending_milestones_count }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-calendar-event text-warning"></i> Due for delivery
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Completed Projects (Mint) -->
+    <div class="col-xl-2 col-lg-4 col-md-6 col-12">
+        <div class="stat-card h-100">
+            <div class="stat-header">
+                <span class="stat-label">Completed Projects</span>
+                <div class="stat-icon mint">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ completed_projects_count }}</div>
+            <div class="stat-footer">
+                <i class="bi bi-trophy-fill text-success"></i> Successfully deployed
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Three Animated Analytics Charts in One Responsive Row -->
+<!-- Three equal columns on desktop, 2+1 on medium screens, 1 per row on mobile -->
+<div class="row g-4 mb-4" id="analytics-charts">
+    <!-- Chart 1: Challenge Assignment Status (Doughnut Chart) -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="content-card h-100 mb-0">
+            <div class="content-card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="content-card-title mb-0">
+                        <i class="bi bi-pie-chart-fill text-success"></i> Challenge Assignment Status
+                    </h3>
+                    <span class="text-muted small">Breakdown across operational stages</span>
+                </div>
+            </div>
+            <div class="content-card-body d-flex align-items-center justify-content-center" style="height: 280px; position: relative;">
+                <canvas id="assignmentStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Active Project Progress (Horizontal Bar Chart) -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="content-card h-100 mb-0">
+            <div class="content-card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="content-card-title mb-0">
+                        <i class="bi bi-bar-chart-steps text-success"></i> Active Project Progress
+                    </h3>
+                    <span class="text-muted small">Completion percentage across active initiatives</span>
+                </div>
+            </div>
+            <div class="content-card-body" style="height: 280px; position: relative;">
+                <canvas id="projectProgressChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 3: Monthly Research Activity (Smooth Line/Area Chart) -->
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="content-card h-100 mb-0">
+            <div class="content-card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="content-card-title mb-0">
+                        <i class="bi bi-graph-up text-success"></i> Monthly Research Activity
+                    </h3>
+                    <span class="text-muted small">Proposals submitted & milestones completed</span>
+                </div>
+            </div>
+            <div class="content-card-body" style="height: 280px; position: relative;">
+                <canvas id="monthlyActivityChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Action Required Section (Placed below restored charts) -->
+<div class="content-card mb-4">
+    <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="content-card-title mb-0">
+                <i class="bi bi-lightning-charge-fill text-warning"></i> Action Required
+            </h3>
+            <span class="text-muted small">Operational academic milestones and institutional actions requiring immediate attention</span>
+        </div>
+    </div>
+    <div class="content-card-body p-3">
+        <div class="row g-3">
+            <!-- 1. New Assignments -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-amber">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle fw-semibold" style="font-size: 0.72rem;">Pending Intake</span>
+                            <span class="fs-4 fw-bold text-dark">{{ new_assignments_count }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">New Assignments</h5>
+                        <p class="text-muted small mb-3">Community challenges assigned by state awaiting institutional response.</p>
+                    </div>
+                    <a href="{{ url_for('university.assigned_challenges') }}" class="btn btn-sm btn-jig-accent w-100">
+                        <i class="bi bi-inbox-fill me-1"></i> Review Assignments ({{ new_assignments_count }}) &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2. Proposal Actions -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-blue">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" style="font-size: 0.72rem;">Proposal Queue</span>
+                            <span class="fs-4 fw-bold text-dark">{{ proposals_action_count }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Proposal Actions</h5>
+                        <p class="text-muted small mb-3">Draft proposals or state revision requests pending re-submission.</p>
+                    </div>
+                    <a href="{{ url_for('university.proposals') }}" class="btn btn-sm btn-outline-secondary w-100">
+                        <i class="bi bi-file-earmark-text me-1"></i> Open Proposals ({{ proposals_action_count }}) &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3. Milestone Alerts -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-red">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 0.72rem;">Milestone Alerts</span>
+                            <span class="fs-4 fw-bold text-danger">{{ milestone_alerts_count }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Milestone Alerts</h5>
+                        <p class="text-muted small mb-3">Upcoming deliverables due within 14 days or lapsed milestone deadlines.</p>
+                    </div>
+                    <a href="{{ url_for('university.milestones') }}" class="btn btn-sm btn-outline-danger w-100">
+                        <i class="bi bi-flag-fill me-1"></i> Manage Milestones ({{ milestone_alerts_count }}) &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. Team Requirements -->
+            <div class="col-md-6 col-lg-3">
+                <div class="action-required-card urgency-green">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size: 0.72rem;">Team Formation</span>
+                            <span class="fs-4 fw-bold text-dark">{{ incomplete_teams_count }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-6 mb-1">Team Requirements</h5>
+                        <p class="text-muted small mb-3">Active projects requiring multidisciplinary faculty and student pairing.</p>
+                    </div>
+                    <a href="{{ url_for('university.team_management') }}" class="btn btn-sm btn-jig-primary w-100">
+                        <i class="bi bi-people-fill me-1"></i> Manage Teams ({{ incomplete_teams_count }}) &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Active Projects (Compact Cards, Maximum 3 Projects) -->
+<div class="content-card mb-4" id="active-projects-section">
+    <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="content-card-title mb-0">
+                <i class="bi bi-cpu-fill text-success"></i> Active Projects
+            </h3>
+            <span class="text-muted small">Multidisciplinary applied research, hardware skids, and field testing</span>
+        </div>
+        <a href="{{ url_for('university.active_projects') }}" class="btn-jig-light btn-sm">
+            View All Projects &rarr;
+        </a>
+    </div>
+    <div class="content-card-body p-3">
+        {% if active_projects_cards %}
+            <div class="row g-3">
+                {% for proj in active_projects_cards %}
+                    <div class="col-lg-4 col-md-6 col-12">
+                        <div class="project-card-compact">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="table-code-pill fw-bold">{{ proj.challenge_code }}</span>
+                                    <span class="jig-badge badge-domain" style="font-size: 0.7rem;">{{ proj.domain }}</span>
+                                </div>
+                                <h4 class="project-card-title" title="{{ proj.title }}">
+                                    {{ proj.title }}
+                                </h4>
+                                <div class="d-flex align-items-center justify-content-between small text-muted mb-2">
+                                    <span><i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ proj.district }}</span>
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-people-fill text-success me-1"></i> {{ proj.team_members_count }} Team Members</span>
+                                </div>
+                                <div class="project-mentor-row mb-3">
+                                    <i class="bi bi-person-check-fill text-success"></i>
+                                    <span>Faculty Mentor: <strong class="text-dark">{{ proj.faculty_mentor }}</strong></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-2 pt-2 border-top">
+                                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                    <span class="fw-semibold text-dark">{{ proj.stage }}</span>
+                                    <span class="fw-bold text-success">{{ proj.progress_percent }}%</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 6px; background-color: rgba(18, 76, 58, 0.08);">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ proj.progress_percent }}%;" aria-valuenow="{{ proj.progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="small text-muted mb-3 d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+                                    <span class="text-truncate me-1" title="{{ proj.next_milestone_title }}">
+                                        <i class="bi bi-flag text-warning me-1"></i> {{ proj.next_milestone_title }}
+                                    </span>
+                                    {% if proj.next_milestone_deadline %}
+                                        <span class="badge bg-light text-dark border">{{ proj.next_milestone_deadline|format_date }}</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{{ url_for('university.milestones', project_id=proj.id) }}" class="btn btn-sm btn-jig-primary w-100">
+                                    <i class="bi bi-kanban me-1"></i> Open Workspace &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted small">
+                <i class="bi bi-info-circle text-success me-1"></i> No active research projects currently initiated. Accept an assigned challenge to begin.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 6. Upcoming Milestones Section (Sorted by nearest deadline first) -->
+<div class="content-card mb-4">
+    <div class="content-card-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="content-card-title mb-0">
+                <i class="bi bi-flag-fill text-warning"></i> Upcoming Milestones
+            </h3>
+            <span class="text-muted small">Sequential institutional deliverables sorted by nearest deadline first</span>
+        </div>
+        <a href="{{ url_for('university.milestones') }}" class="btn-jig-light btn-sm">
+            Manage All Milestones &rarr;
+        </a>
+    </div>
+    <div class="content-card-body p-0">
+        <div class="table-responsive-custom">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Project & Challenge</th>
+                        <th>Milestone Deliverable</th>
+                        <th style="width: 150px;">Deadline</th>
+                        <th style="width: 160px;">Timeline Remaining</th>
+                        <th style="width: 140px;">Current Status</th>
+                        <th class="text-end" style="width: 120px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ms in upcoming_milestones_list %}
+                        <tr class="milestone-table-row">
+                            <td>
+                                <div class="fw-bold small text-dark table-title-truncate" title="{{ ms.project_title }}">
+                                    {{ ms.project_title }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small fw-semibold text-dark table-title-truncate" title="{{ ms.title }}">
+                                    {{ ms.title }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="small {% if ms.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                    <i class="bi bi-calendar-event me-1"></i> {{ ms.deadline|format_date if ms.deadline else 'Not set' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if ms.is_overdue %}
+                                    <span class="badge bg-danger text-white">
+                                        <i class="bi bi-clock-history me-1"></i> {{ ms.days_remaining_text }}
+                                    </span>
+                                {% elif ms.badge_variant == 'warning' %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle fw-semibold">
+                                        <i class="bi bi-alarm me-1"></i> {{ ms.days_remaining_text }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                        <i class="bi bi-hourglass-split me-1"></i> {{ ms.days_remaining_text }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ ms.status }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('university.milestones', project_id=ms.project_id) }}" class="btn btn-sm btn-jig-outline py-1 px-2" style="font-size: 0.75rem;">
+                                    Update &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">
+                                <i class="bi bi-check2-circle text-success me-1"></i> No upcoming pending milestones scheduled. All deliverables are on track.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const assignmentStatusLabels = {{ assignment_status_labels|tojson }};
+        const assignmentStatusData = {{ assignment_status_data|tojson }};
+        const projectLabels = {{ project_labels|tojson }};
+        const projectProgress = {{ project_progress|tojson }};
+        const monthlyActivityLabels = {{ monthly_activity_labels|tojson }};
+        const monthlyProposalsData = {{ monthly_proposals_data|tojson }};
+        const monthlyMilestonesData = {{ monthly_milestones_data|tojson }};
+
+        initUniversityCharts(
+            assignmentStatusLabels,
+            assignmentStatusData,
+            projectLabels,
+            projectProgress,
+            monthlyActivityLabels,
+            monthlyProposalsData,
+            monthlyMilestonesData
+        );
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}{{ challenge.code }} - Challenge Details{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="table-code-pill fs-6">{{ challenge.code }}</span>
+            <span class="jig-badge {{ challenge.severity_badge_class }}">{{ challenge.severity }} Severity</span>
+            <span class="jig-badge {{ challenge.status_badge_class }}">{{ challenge.status }}</span>
+        </div>
+        <h2 class="fw-bold text-dark mb-1">{{ challenge.title }}</h2>
+        <span class="text-muted small">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ challenge.district }} &bull; {{ challenge.block or 'Block N/A' }} &bull; {{ challenge.village_city or '' }}
+            &bull; Submitted on {{ challenge.created_at|format_date }}
+        </span>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('citizen.my_challenges') }}" class="btn-jig-outline">
+            <i class="bi bi-arrow-left"></i> Back to Submissions
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Challenge Overview & Evidence -->
+    <div class="col-lg-8">
+        <!-- Main Description Card -->
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-card-text text-success"></i> Problem Statement & Context
+                </h3>
+                <span class="jig-badge badge-domain">{{ challenge.domain }}</span>
+            </div>
+            <div class="content-card-body">
+                <div class="row g-3 mb-4 p-3 bg-light rounded">
+                    <div class="col-sm-4">
+                        <div class="text-muted small text-uppercase fw-semibold">People Affected</div>
+                        <div class="fs-5 fw-bold text-dark">{{ "{:,}".format(challenge.people_affected) }} citizens</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="text-muted small text-uppercase fw-semibold">Problem Duration</div>
+                        <div class="fs-5 fw-bold text-dark">{{ challenge.duration_months }} months ongoing</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="text-muted small text-uppercase fw-semibold">GPS Location</div>
+                        <div class="small fw-semibold text-dark text-truncate">{{ challenge.gps_coords or 'Coordinates Pending' }}</div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-dark fs-6 mb-2">Detailed Ground Report</h5>
+                <p class="text-secondary mb-4" style="line-height: 1.7; white-space: pre-line;">{{ challenge.description }}</p>
+
+                {% if challenge.address_text %}
+                    <div class="p-2 border rounded bg-white small mb-3">
+                        <span class="fw-bold text-dark"><i class="bi bi-pin-map-fill text-danger me-1"></i> Physical Landmark / Address:</span>
+                        {{ challenge.address_text }}
+                    </div>
+                {% endif %}
+
+                {% if challenge.validation_notes %}
+                    <div class="p-3 border-start border-success border-4 rounded bg-success-subtle mb-3">
+                        <div class="fw-bold small text-success mb-1"><i class="bi bi-shield-check me-1"></i> Authority Validation Notes:</div>
+                        <div class="small text-dark">{{ challenge.validation_notes }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Evidence Gallery -->
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-paperclip text-success"></i> Uploaded Evidence & Documents
+                </h3>
+                <span class="badge bg-light text-muted border">{{ challenge.media.count() }} Files</span>
+            </div>
+            <div class="content-card-body">
+                {% if challenge.media.count() > 0 %}
+                    <div class="row g-3">
+                        {% for media in challenge.media.all() %}
+                            <div class="col-sm-6 col-md-4">
+                                <div class="border rounded p-2 text-center h-100 bg-light">
+                                    {% if media.is_image %}
+                                        <img src="{{ url_for('static', filename='uploads/' + media.filename) }}" alt="{{ media.original_name }}" class="img-fluid rounded mb-2" style="max-height: 130px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="py-4 text-secondary">
+                                            <i class="bi bi-file-earmark-pdf-fill fs-1 text-danger"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="small fw-semibold text-truncate" title="{{ media.original_name }}">{{ media.original_name }}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Uploaded {{ media.uploaded_at|time_ago }}</div>
+                                    <a href="{{ url_for('static', filename='uploads/' + media.filename) }}" target="_blank" class="btn btn-sm btn-outline-secondary mt-2 w-100 py-1" style="font-size: 0.72rem;">
+                                        <i class="bi bi-box-arrow-up-right me-1"></i> View Evidence
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-0">No photographic evidence or PDF attachments were included with this submission.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Project Milestone Details (if University Project Active) -->
+        {% if challenge.project %}
+            <div class="content-card">
+                <div class="content-card-header">
+                    <h3 class="content-card-title">
+                        <i class="bi bi-cpu-fill text-success"></i> University Solution Project
+                    </h3>
+                    <span class="badge bg-success text-white">{{ challenge.project.stage }}</span>
+                </div>
+                <div class="content-card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-bold text-dark">Overall Solution Progress</span>
+                        <span class="small fw-bold text-success">{{ challenge.project.progress_percent }}%</span>
+                    </div>
+                    <div class="progress-container mb-4" style="height: 10px;">
+                        <div class="progress-bar-fill" style="width: {{ challenge.project.progress_percent }}%;"></div>
+                    </div>
+
+                    <h5 class="fw-bold fs-6 text-dark mb-3">Project Milestones</h5>
+                    <div class="list-group list-group-flush">
+                        {% for m in challenge.project.milestones.all() %}
+                            <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold small text-dark">{{ m.order_index }}. {{ m.title }}</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">Deliverable: {{ m.deliverable }}</div>
+                                </div>
+                                <span class="jig-badge {% if m.status == 'Completed' %}badge-status-completed{% elif m.status == 'In Progress' %}badge-status-progress{% else %}badge-status-submitted{% endif %}">
+                                    {{ m.status }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: University Partner & Status History Timeline -->
+    <div class="col-lg-4">
+        <!-- Assigned University Card -->
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-mortarboard-fill text-success"></i> Academic Partner
+                </h3>
+            </div>
+            <div class="content-card-body">
+                {% if challenge.assigned_university %}
+                    <div class="text-center py-2">
+                        <div class="user-avatar-circle mx-auto mb-2" style="width: 52px; height: 52px; font-size: 1.25rem;">
+                            {{ challenge.assigned_university.code[:2] }}
+                        </div>
+                        <h4 class="fs-6 fw-bold text-dark mb-1">{{ challenge.assigned_university.name }}</h4>
+                        <div class="small text-muted mb-2">{{ challenge.assigned_university.district }}, Jharkhand</div>
+                        <span class="badge bg-light text-dark border mb-3"><i class="bi bi-star-fill text-warning me-1"></i> {{ challenge.assigned_university.rating }} Institutional Rating</span>
+
+                        <div class="p-2 bg-light rounded text-start small">
+                            <div class="fw-semibold text-muted mb-1" style="font-size: 0.72rem;">CORE RESEARCH CAPABILITIES:</div>
+                            <div class="text-dark">{{ challenge.assigned_university.domains_of_expertise }}</div>
+                        </div>
+
+                        <div class="mt-3 text-start small text-muted">
+                            <div><i class="bi bi-envelope text-success me-1"></i> {{ challenge.assigned_university.contact_email }}</div>
+                            <div><i class="bi bi-telephone text-success me-1"></i> {{ challenge.assigned_university.phone or '+91 651 2275444' }}</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-building-dash fs-2 d-block mb-2"></i>
+                        <div class="fw-semibold text-dark small">Pending University Allocation</div>
+                        <p class="small text-muted mt-1 mb-0">State authorities are currently evaluating this challenge to match with the most qualified engineering or agricultural department.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Status History Audit Trail Timeline -->
+        <div class="content-card">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-shield-check text-success"></i> Verification Audit Trail
+                </h3>
+            </div>
+            <div class="content-card-body">
+                <div class="status-timeline m-0">
+                    {% for h in challenge.history.all() %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker {% if loop.first %}active{% endif %}"></div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="jig-badge {% if loop.first %}badge-status-validated{% else %}badge-status-submitted{% endif %}" style="font-size: 0.68rem;">
+                                        {{ h.new_status }}
+                                    </span>
+                                    <span class="timeline-time">{{ h.created_at|time_ago }}</span>
+                                </div>
+                                <div class="small text-dark" style="font-size: 0.8rem;">{{ h.notes }}</div>
+                                {% if h.updater %}
+                                    <div class="text-muted mt-1" style="font-size: 0.68rem;">
+                                        <i class="bi bi-person-check me-1"></i> Updated by: {{ h.updater.full_name }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

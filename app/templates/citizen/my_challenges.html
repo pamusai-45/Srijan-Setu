@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}My Challenges{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">My Reported Challenges</h2>
+        <p class="text-muted small mb-0">Track verification status, assigned academic partners, and field progress of your submissions.</p>
+    </div>
+    <a href="{{ url_for('citizen.submit_challenge') }}" class="btn-jig-primary">
+        <i class="bi bi-plus-lg"></i> Report New Challenge
+    </a>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="content-card mb-4">
+    <div class="content-card-body py-3">
+        <form action="{{ url_for('citizen.my_challenges') }}" method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control-custom border-start-0 ps-0" placeholder="Search by title, code or district..." value="{{ search_query }}">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <select name="status" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Statuses ({{ challenges|length }})</option>
+                    {% for st in challenge_statuses %}
+                        <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <select name="domain" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Domains</option>
+                    {% for d in domains_list %}
+                        <option value="{{ d }}" {% if selected_domain == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1">
+                <a href="{{ url_for('citizen.my_challenges') }}" class="btn btn-outline-secondary w-100 btn-sm py-2" title="Reset Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Challenges Table -->
+<div class="content-card">
+    <div class="content-card-body p-0">
+        {% if challenges %}
+            <div class="table-responsive-custom">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Challenge ID</th>
+                            <th>Problem Title & Domain</th>
+                            <th>Location</th>
+                            <th>Severity</th>
+                            <th>Submitted On</th>
+                            <th>Current Status</th>
+                            <th>Progress</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in challenges %}
+                            <tr>
+                                <td>
+                                    <span class="table-code-pill">{{ c.code }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('citizen.challenge_detail', challenge_id=c.id) }}" class="fw-bold text-dark text-decoration-none d-block mb-1 hover-primary">
+                                        {{ c.title }}
+                                    </a>
+                                    <span class="jig-badge badge-domain">{{ c.domain }}</span>
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-dark">{{ c.district }}</div>
+                                    <div class="small text-muted">{{ c.block or c.village_city or 'Main District' }}</div>
+                                </td>
+                                <td>
+                                    <span class="jig-badge {{ c.severity_badge_class }}">
+                                        {{ c.severity }}
+                                    </span>
+                                </td>
+                                <td class="small text-muted">
+                                    {{ c.created_at|format_date }}
+                                </td>
+                                <td>
+                                    <span class="jig-badge {{ c.status_badge_class }}">
+                                        {{ c.status }}
+                                    </span>
+                                    {% if c.assigned_university %}
+                                        <div class="small text-muted mt-1" style="font-size: 0.72rem;">
+                                            <i class="bi bi-mortarboard-fill text-success"></i> {{ c.assigned_university.code }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td style="width: 130px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress-container flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar-fill" style="width: {{ c.progress_percentage }}%;"></div>
+                                        </div>
+                                        <span class="small text-muted fw-bold" style="font-size: 0.72rem;">{{ c.progress_percentage }}%</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('citizen.challenge_detail', challenge_id=c.id) }}" class="btn-jig-outline btn-sm py-1 px-3">
+                                        Details &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-folder-x fs-1 text-muted d-block mb-2"></i>
+                <div class="fw-bold text-dark">No challenges found matching criteria</div>
+                <p class="text-muted small mb-3">Try clearing search filters or report a new community issue.</p>
+                <a href="{{ url_for('citizen.my_challenges') }}" class="btn-jig-light btn-sm me-2">Clear Filters</a>
+                <a href="{{ url_for('citizen.submit_challenge') }}" class="btn-jig-primary btn-sm">Submit New Challenge</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

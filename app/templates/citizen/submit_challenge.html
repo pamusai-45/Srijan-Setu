@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Challenge{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <span class="jig-badge badge-domain mb-1">SIH PROBLEM STATEMENT 26043</span>
+        <h2 class="fw-bold text-dark mb-1">Report a Community Challenge</h2>
+        <p class="text-muted small mb-0">Submit a localized developmental or technological challenge to initiate state validation and academic R&D.</p>
+    </div>
+    <a href="{{ url_for('citizen.my_challenges') }}" class="btn-jig-outline">
+        <i class="bi bi-arrow-left"></i> Back to Submissions
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-file-earmark-plus-fill text-success"></i> Challenge Dossier Form
+                </h3>
+                <span class="badge bg-light text-muted border">All * fields required</span>
+            </div>
+            <div class="content-card-body">
+                <form action="{{ url_for('citizen.submit_challenge') }}" method="POST" enctype="multipart/form-data">
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label-custom" for="title">Challenge Title *</label>
+                        <input type="text" class="form-control-custom" id="title" name="title" placeholder="e.g. Severe Fluoride Contamination in Hand Pumps across Murhu Block" required>
+                        <div class="form-text small text-muted">Provide a concise, descriptive title highlighting the core problem.</div>
+                    </div>
+
+                    <!-- Domain & Severity -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom" for="domain">Domain / Focus Area *</label>
+                            <select class="form-select-custom" id="domain" name="domain" required>
+                                <option value="" disabled selected>Select Problem Domain</option>
+                                {% for domain in domains_list %}
+                                    <option value="{{ domain }}">{{ domain }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom" for="severity">Severity Level *</label>
+                            <select class="form-select-custom" id="severity" name="severity" required>
+                                <option value="Low">Low - Improvement Opportunity</option>
+                                <option value="Medium" selected>Medium - Significant Chronic Issue</option>
+                                <option value="High">High - Acute Community Distress</option>
+                                <option value="Critical">Critical - Immediate Health / Life Safety Threat</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Description -->
+                    <div class="mb-3">
+                        <label class="form-label-custom" for="description">Detailed Description & Impact *</label>
+                        <textarea class="form-control-custom" id="description" name="description" rows="5" placeholder="Explain the problem in detail: when did it start, how does it affect the residents, what existing measures failed, and what kind of scientific or engineering solution is anticipated..." required></textarea>
+                    </div>
+
+                    <!-- Geographical Location: District, Block, Village -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label-custom" for="district">District *</label>
+                            <select class="form-select-custom" id="district" name="district" required>
+                                <option value="" disabled selected>Select Jharkhand District</option>
+                                {% for dist in jharkhand_districts %}
+                                    <option value="{{ dist }}">{{ dist }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom" for="block">Block / Tehsil</label>
+                            <input type="text" class="form-control-custom" id="block" name="block" placeholder="e.g. Kanke / Murhu / Jharia">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom" for="village_city">Village / Ward / Landmark</label>
+                            <input type="text" class="form-control-custom" id="village_city" name="village_city" placeholder="e.g. Kalyanpur Panchayat">
+                        </div>
+                    </div>
+
+                    <!-- Quantitative Metrics: People affected, duration -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom" for="people_affected">Estimated People Affected (Population)</label>
+                            <input type="number" class="form-control-custom" id="people_affected" name="people_affected" value="500" min="1" step="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom" for="duration_months">Persistence of Problem (Months)</label>
+                            <input type="number" class="form-control-custom" id="duration_months" name="duration_months" value="6" min="1" step="1">
+                        </div>
+                    </div>
+
+                    <!-- Address & GPS Coordinates -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label-custom" for="address_text">Street Address or Physical Location</label>
+                            <input type="text" class="form-control-custom" id="address_text" name="address_text" placeholder="e.g. Near Community Health Sub-centre, Main Chowk">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-custom" for="gps_coords">GPS Coordinates (Lat, Long)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control-custom" id="gps_coords" name="gps_coords" placeholder="e.g. 23.3441° N, 85.3096° E">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('gps_coords').value='23.3441° N, 85.3096° E'" title="Insert Sample Ranchi Coordinates">
+                                    <i class="bi bi-geo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Media Uploads -->
+                    <div class="mb-4">
+                        <label class="form-label-custom" for="media_files">Upload Supporting Evidence (Photos / Lab Reports / PDFs)</label>
+                        <input type="file" class="form-control-custom" id="media_files" name="media_files" multiple accept="image/*,.pdf,.doc,.docx">
+                        <div class="form-text small text-muted">You can select multiple photos (PNG, JPG) or documents (PDF up to 16MB total).</div>
+                        <div id="file-preview-list" class="mt-2"></div>
+                    </div>
+
+                    <!-- Submission Agreement -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="consent" required checked>
+                        <label class="form-check-label text-muted small" for="consent">
+                            I verify that this community challenge represents factual local conditions in Jharkhand and agree to coordinate with allocated university field teams.
+                        </label>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="submit" class="btn-jig-primary">
+                            <i class="bi bi-send-fill"></i> Submit Challenge to State Grid
+                        </button>
+                        <a href="{{ url_for('citizen.overview') }}" class="btn-jig-light">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Guidance Column -->
+    <div class="col-lg-4">
+        <div class="content-card mb-4">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-lightbulb-fill text-warning"></i> Submission Guidelines
+                </h3>
+            </div>
+            <div class="content-card-body">
+                <div class="mb-3">
+                    <div class="fw-bold small text-dark mb-1"><i class="bi bi-check-circle-fill text-success me-1"></i> What makes a great challenge?</div>
+                    <p class="small text-muted mb-0">Clear, quantifiable problems that need technological, engineering, or scientific intervention rather than routine administrative file clearances.</p>
+                </div>
+
+                <div class="mb-3">
+                    <div class="fw-bold small text-dark mb-1"><i class="bi bi-camera-fill text-primary me-1"></i> Attach Ground Evidence</div>
+                    <p class="small text-muted mb-0">Photos of contaminated water sources, malfunctioning transformers, rotting crop harvests, or degraded roads dramatically expedite government validation.</p>
+                </div>
+
+                <div>
+                    <div class="fw-bold small text-dark mb-1"><i class="bi bi-award-fill text-info me-1"></i> University Allocation</div>
+                    <p class="small text-muted mb-0">Once verified, your challenge is matched by our algorithm with leading engineering and agricultural institutions like BIT Mesra, NIT Jamshedpur, IIT ISM Dhanbad, or BAU Ranchi.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card bg-white border">
+            <div class="content-card-body">
+                <div class="fw-bold text-dark small mb-2"><i class="bi bi-shield-check text-success me-1"></i> Data Privacy & Integrity</div>
+                <p class="small text-muted mb-0">Your contact info will only be shared with authorized university research teams assigned by the Government of Jharkhand.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

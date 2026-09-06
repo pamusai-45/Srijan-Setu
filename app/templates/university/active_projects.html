@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Active Projects - {{ university.code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <span class="jig-badge badge-domain mb-1">R&D WORKSPACES</span>
+        <h2 class="fw-bold text-dark mb-1">Active Innovation Projects</h2>
+        <p class="text-muted small mb-0">Applied solutions currently being researched, fabricated, and piloted by {{ university.name }}.</p>
+    </div>
+    <a href="{{ url_for('university.assigned_challenges') }}" class="btn-jig-outline">
+        <i class="bi bi-inbox"></i> View Assigned Queue
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for proj in projects %}
+        <div class="col-lg-6">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <div>
+                        <span class="table-code-pill me-1">{{ proj.challenge.code }}</span>
+                        <span class="badge bg-success text-white">{{ proj.stage }}</span>
+                    </div>
+                    <span class="jig-badge {{ proj.challenge.severity_badge_class }}">{{ proj.challenge.severity }}</span>
+                </div>
+
+                <div class="content-card-body">
+                    <h4 class="fw-bold fs-5 text-dark mb-1">{{ proj.title }}</h4>
+                    <div class="small text-muted mb-3">
+                        <i class="bi bi-geo-alt text-danger"></i> {{ proj.challenge.district }} ({{ proj.challenge.block or 'N/A' }})
+                        &bull; Domain: <span class="fw-semibold text-dark">{{ proj.challenge.domain }}</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-semibold text-muted">Execution Completion</span>
+                            <span class="small fw-bold text-success">{{ proj.progress_percent }}%</span>
+                        </div>
+                        <div class="progress-container" style="height: 10px;">
+                            <div class="progress-bar-fill" style="width: {{ proj.progress_percent }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 p-3 bg-light rounded small mb-3">
+                        <div class="col-6">
+                            <span class="text-muted d-block" style="font-size: 0.72rem;">ESTIMATED BUDGET:</span>
+                            <span class="fw-bold text-dark">{{ proj.budget|inr_format }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block" style="font-size: 0.72rem;">EXPECTED COMPLETION:</span>
+                            <span class="fw-bold text-dark">{{ proj.expected_completion|format_date if proj.expected_completion else 'Ongoing' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Milestones & Team Counters -->
+                    <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white small mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-flag-fill text-warning"></i>
+                            <span><strong>{{ proj.milestones.count() }}</strong> Milestones</span>
+                            <span class="text-muted">({{ proj.milestones.filter_by(status='Completed').count() }} Completed)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-people-fill text-primary"></i>
+                            <span><strong>{{ proj.team_members.count() }}</strong> Researchers</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Links Grid -->
+                    <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                        <a href="{{ url_for('university.milestones', project_id=proj.id) }}" class="btn-jig-primary btn-sm py-1 px-3" style="font-size: 0.78rem;">
+                            <i class="bi bi-flag"></i> Milestones &rarr;
+                        </a>
+                        <a href="{{ url_for('university.team_management', project_id=proj.id) }}" class="btn-jig-outline btn-sm py-1 px-3" style="font-size: 0.78rem;">
+                            <i class="bi bi-people"></i> Manage Team &rarr;
+                        </a>
+                        <a href="{{ url_for('citizen.challenge_detail', challenge_id=proj.challenge_id) }}" class="btn btn-outline-secondary btn-sm py-1 px-2 ms-auto" style="font-size: 0.78rem;" title="View Citizen Challenge Report">
+                            <i class="bi bi-eye"></i> Dossier
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-cpu fs-1 text-muted d-block mb-3"></i>
+            <h4 class="fw-bold text-dark">No active projects currently</h4>
+            <p class="text-muted small mb-3">Accept an assigned challenge to launch a solution project.</p>
+            <a href="{{ url_for('university.assigned_challenges') }}" class="btn-jig-primary btn-sm">
+                <i class="bi bi-inbox"></i> View Assigned Challenges
+            </a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

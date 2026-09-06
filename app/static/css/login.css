@@ -1,0 +1,412 @@
+/* Split-Screen Login Page Styling - Matching Reference Aesthetic */
+
+.login-split-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-cream);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Left Hero & Visual Arc Section */
+.login-left-pane {
+    flex: 1.15;
+    background: radial-gradient(circle at 10% 20%, #ebf7f2 0%, #f7f5ec 70%);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3.5rem 4rem;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Decorative Large Curved Dividing Arc */
+.login-left-pane::after {
+    content: "";
+    position: absolute;
+    top: -10%;
+    right: -150px;
+    width: 600px;
+    height: 120%;
+    border-radius: 50%;
+    border: 1px solid rgba(18, 76, 58, 0.12);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.login-left-pane::before {
+    content: "";
+    position: absolute;
+    bottom: -150px;
+    left: -100px;
+    width: 450px;
+    height: 450px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99, 185, 154, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.login-top-tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--primary-forest);
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+.login-hero-content {
+    margin: auto 0;
+    max-width: 580px;
+}
+
+.login-brand-title {
+    font-size: 3.2rem;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--primary-dark);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.login-brand-title span.accent-text {
+    color: var(--primary-forest);
+    position: relative;
+    display: inline-block;
+}
+
+.login-brand-title span.accent-text::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--accent-mint);
+    z-index: -1;
+    border-radius: 4px;
+}
+
+.login-sub-motto {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.22em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.login-tagline-lead {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-forest);
+    margin-bottom: 0.85rem;
+}
+
+.login-description {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.login-features-list {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.login-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.login-feature-item i {
+    color: var(--accent-mint);
+    font-size: 1rem;
+}
+
+
+/* Right Side - Form Card Container */
+.login-right-pane {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    background-color: transparent;
+    position: relative;
+}
+
+.login-card-box {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2.25rem;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 10px 35px -5px rgba(11, 43, 32, 0.08), 0 4px 12px -2px rgba(11, 43, 32, 0.03);
+    position: relative;
+}
+
+.login-card-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    padding: 0.25rem 0.65rem;
+    background: var(--light-mint);
+    color: var(--primary-forest);
+    border-radius: 20px;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    text-transform: uppercase;
+}
+
+.login-card-box h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.35rem;
+}
+
+.login-card-subtext {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Three Role Tabs */
+.role-tabs-container {
+    display: flex;
+    background: #f1f5f3;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(11, 43, 32, 0.06);
+}
+
+.role-tab-btn {
+    flex: 1;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.role-tab-btn:hover {
+    color: var(--primary-dark);
+}
+
+.role-tab-btn.active {
+    background: #ffffff;
+    color: var(--primary-forest);
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(11, 43, 32, 0.08);
+}
+
+/* Input Fields */
+.input-with-icon-wrapper {
+    position: relative;
+    margin-bottom: 1.15rem;
+}
+
+.input-with-icon-wrapper i.field-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 1.05rem;
+    pointer-events: none;
+}
+
+.input-with-icon-wrapper input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    background: #f8faf9;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    transition: all 0.2s ease;
+}
+
+.input-with-icon-wrapper input:focus {
+    background: #ffffff;
+    border-color: var(--accent-mint);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 185, 154, 0.25);
+}
+
+.toggle-password-btn {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.toggle-password-btn:hover {
+    color: var(--primary-forest);
+}
+
+.login-options-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    margin-bottom: 1.5rem;
+}
+
+.login-options-row a {
+    color: var(--primary-forest);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-options-row a:hover {
+    text-decoration: underline;
+}
+
+.btn-sign-in-green {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--primary-forest);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(18, 76, 58, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-sign-in-green:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(18, 76, 58, 0.35);
+}
+
+/* Demo Credentials Box */
+.demo-creds-box {
+    margin-top: 1.75rem;
+    padding: 1.15rem;
+    background: var(--bg-cream);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-strong);
+}
+
+.demo-creds-title {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--primary-forest);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.demo-btn-grid {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.demo-fill-btn {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    padding: 0.45rem 0.35rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.demo-fill-btn:hover {
+    background: var(--light-mint);
+    border-color: var(--accent-mint);
+    color: var(--primary-forest);
+}
+
+.demo-role-icon {
+    color: var(--primary-forest) !important;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.demo-fill-btn:hover .demo-role-icon {
+    color: var(--accent-mint) !important;
+    transform: scale(1.08);
+}
+
+/* Citizen Register Prompt */
+.login-register-prompt {
+    font-size: 0.86rem;
+    padding-top: 0.25rem;
+}
+
+.register-link {
+    color: var(--primary-forest);
+    font-weight: 700;
+    transition: color 0.2s ease;
+}
+
+.register-link:hover {
+    color: var(--primary-hover);
+    text-decoration: underline !important;
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .login-split-container {
+        flex-direction: column;
+    }
+
+    .login-left-pane {
+        padding: 2.5rem 1.75rem;
+    }
+
+    .login-brand-title {
+        font-size: 2.25rem;
+    }
+
+    .login-right-pane {
+        padding: 2rem 1.25rem 3rem;
+    }
+
+    .login-left-pane::after {
+        display: none;
+    }
+}

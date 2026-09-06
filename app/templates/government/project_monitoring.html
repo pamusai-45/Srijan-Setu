@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Statewide Project Monitoring{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Statewide Project Monitoring</h2>
+        <p class="text-muted small mb-0">Real-time supervision of active academic R&D, milestone achievements, deadlines, and budget deployments.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-light text-dark border p-2">{{ projects|length }} Active State Projects</span>
+    </div>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="content-card mb-4">
+    <div class="content-card-body py-3">
+        <form action="{{ url_for('government.project_monitoring') }}" method="GET" class="row g-2">
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control-custom" placeholder="Search project title or solution..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="university_id" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Universities</option>
+                    {% for u in universities %}
+                        <option value="{{ u.id }}" {% if selected_university == u.id|string %}selected{% endif %}>{{ u.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select-custom" onchange="this.form.submit()">
+                    <option value="">All Project Statuses</option>
+                    <option value="Active" {% if selected_status == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Completed" {% if selected_status == 'Completed' %}selected{% endif %}>Completed</option>
+                    <option value="On Hold" {% if selected_status == 'On Hold' %}selected{% endif %}>On Hold</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <a href="{{ url_for('government.project_monitoring') }}" class="btn btn-outline-secondary w-100 btn-sm py-2" title="Reset">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Projects Cards Grid -->
+<div class="row g-4">
+    {% for proj in projects %}
+        <div class="col-lg-6">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <div>
+                        <span class="table-code-pill me-1">{{ proj.challenge.code }}</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">{{ proj.stage }}</span>
+                    </div>
+                    <span class="jig-badge {{ proj.challenge.severity_badge_class }}">{{ proj.challenge.severity }}</span>
+                </div>
+                <div class="content-card-body">
+                    <h4 class="fw-bold fs-6 text-dark mb-1">{{ proj.title }}</h4>
+                    <div class="small text-muted mb-3">
+                        <i class="bi bi-mortarboard-fill text-success me-1"></i> {{ proj.university.name }}
+                        &bull; <i class="bi bi-geo-alt text-danger"></i> {{ proj.challenge.district }}
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-semibold text-muted">Project Completion</span>
+                            <span class="small fw-bold text-dark">{{ proj.progress_percent }}%</span>
+                        </div>
+                        <div class="progress-container" style="height: 8px;">
+                            <div class="progress-bar-fill" style="width: {{ proj.progress_percent }}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Details Row -->
+                    <div class="row g-2 p-2 bg-light rounded small mb-3">
+                        <div class="col-6">
+                            <span class="text-muted d-block" style="font-size: 0.72rem;">ESTIMATED BUDGET:</span>
+                            <span class="fw-bold text-dark">{{ proj.budget|inr_format }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted d-block" style="font-size: 0.72rem;">EXPECTED COMPLETION:</span>
+                            <span class="fw-bold text-dark">
+                                {% if proj.expected_completion %}
+                                    {{ proj.expected_completion|format_date }}
+                                {% else %}
+                                    Under Review
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Milestones Checklist Preview -->
+                    <div class="border rounded p-2 mb-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-bold text-dark"><i class="bi bi-flag-fill text-warning me-1"></i> Key Milestones</span>
+                            <span class="badge bg-light text-muted border" style="font-size: 0.68rem;">{{ proj.milestones.count() }} Steps</span>
+                        </div>
+                        <div class="small">
+                            {% for m in proj.milestones.limit(3).all() %}
+                                <div class="d-flex align-items-center justify-content-between py-1 border-bottom-dashed">
+                                    <div class="text-truncate me-2" style="max-width: 280px;">
+                                        {% if m.status == 'Completed' %}
+                                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        {% elif m.status == 'In Progress' %}
+                                            <i class="bi bi-arrow-repeat text-primary me-1"></i>
+                                        {% else %}
+                                            <i class="bi bi-circle text-muted me-1"></i>
+                                        {% endif %}
+                                        <span class="{% if m.status == 'Completed' %}text-muted text-decoration-line-through{% else %}text-dark{% endif %}">
+                                            {{ m.title }}
+                                        </span>
+                                    </div>
+                                    <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">{{ m.status }}</span>
+                                </div>
+                            {% else %}
+                                <div class="text-muted small">Milestones being formulated by PI.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Bottom Team Info & Action -->
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                        <div class="small text-muted">
+                            <i class="bi bi-people-fill me-1"></i> {{ proj.team_members.count() }} Team Researchers
+                        </div>
+                        <a href="{{ url_for('citizen.challenge_detail', challenge_id=proj.challenge_id) }}" class="btn-jig-outline btn-sm py-1 px-3" style="font-size: 0.75rem;">
+                            View Master Dossier &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-kanban fs-1 text-muted d-block mb-2"></i>
+            <h5 class="fw-bold text-dark">No projects matching your search</h5>
+            <p class="text-muted small">Adjust university or status filters to view active deployments.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

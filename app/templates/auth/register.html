@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Registration - Srijan Setu</title>
+    
+    <!-- Bootstrap 5 CSS & Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+
+<div class="login-split-container">
+    <!-- Left Hero Section with Brand Gradient & Curves -->
+    <div class="login-left-pane">
+        <div class="login-top-tagline">
+            PROPOSED FOR GOVT. OF JHARKHAND // SIH PS 26043
+        </div>
+
+        <div class="login-hero-content">
+            <div class="login-brand-title">
+                SRIJAN <span class="accent-text">SETU</span>
+                <i class="bi bi-arrow-up-right fs-2 ms-2 text-dark"></i>
+            </div>
+            <div class="login-sub-motto">
+                COLLABORATE &bull; INNOVATE &bull; RESOLVE
+            </div>
+            
+            <div class="login-tagline-lead">
+                “Community Challenges. Collaborative Solutions.”
+            </div>
+
+            <p class="login-description">
+                A collaborative platform connecting community challenges with government support and university expertise across Jharkhand.
+            </p>
+
+            <div class="login-features-list">
+                <div class="login-feature-item">
+                    <i class="bi bi-shield-fill-check"></i>
+                    <span>State-Verified Tracking</span>
+                </div>
+                <div class="login-feature-item">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    <span>University R&D Integration</span>
+                </div>
+                <div class="login-feature-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Panchayat to Capital</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: Registration Card Form -->
+    <div class="login-right-pane">
+        <div class="login-card-box" style="max-width: 480px;">
+            <span class="login-card-badge">SRIJAN SETU &bull; CITIZEN REGISTRATION</span>
+            <h2>Create Account</h2>
+            <p class="login-card-subtext">Register to report community hurdles and track technological solutions.</p>
+
+            <!-- Role Scope Notice -->
+            <div class="p-2 mb-3 rounded" style="background: var(--light-mint-subtle); border: 1px solid rgba(18, 76, 58, 0.15); font-size: 0.78rem; color: var(--primary-forest);">
+                <i class="bi bi-shield-lock-fill me-1"></i>
+                <strong>Notice:</strong> Only citizens can self-register. Government and university accounts are issued by authorized administrators.
+            </div>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'info' }} alert-dismissible fade show small py-2 px-3 mb-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-sm py-2 px-3" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Registration Form -->
+            <form action="{{ url_for('auth.register') }}" method="POST">
+                <!-- Full Name -->
+                <div class="mb-3">
+                    <label class="form-label-custom" for="fullname-field">Full Name</label>
+                    <div class="input-with-icon-wrapper">
+                        <i class="bi bi-person field-icon"></i>
+                        <input type="text" id="fullname-field" name="full_name" class="form-control-custom" placeholder="e.g. Ramesh Soren" value="{{ full_name or '' }}" required autofocus>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label-custom" for="email-field">Email Address</label>
+                    <div class="input-with-icon-wrapper">
+                        <i class="bi bi-envelope field-icon"></i>
+                        <input type="email" id="email-field" name="email" class="form-control-custom" placeholder="name@domain.com" value="{{ email or '' }}" required>
+                    </div>
+                </div>
+
+                <!-- Phone / Mobile & District Grid -->
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-6">
+                        <label class="form-label-custom" for="phone-field">Mobile Number</label>
+                        <div class="input-with-icon-wrapper">
+                            <i class="bi bi-telephone field-icon"></i>
+                            <input type="tel" id="phone-field" name="phone" class="form-control-custom" placeholder="10-digit mobile" value="{{ phone or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label-custom" for="district-field">District</label>
+                        <div class="input-with-icon-wrapper">
+                            <i class="bi bi-geo-alt field-icon"></i>
+                            <select id="district-field" name="district" class="form-control-custom" style="padding-left: 2.75rem;">
+                                <option value="">Select District</option>
+                                {% for dist in jharkhand_districts %}
+                                    <option value="{{ dist }}" {% if district == dist %}selected{% endif %}>{{ dist }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label class="form-label-custom" for="password-field">Password</label>
+                    <div class="input-with-icon-wrapper">
+                        <i class="bi bi-lock field-icon"></i>
+                        <input type="password" id="password-field" name="password" class="form-control-custom" placeholder="At least 6 characters" required>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-3">
+                    <label class="form-label-custom" for="confirm-password-field">Confirm Password</label>
+                    <div class="input-with-icon-wrapper">
+                        <i class="bi bi-shield-check field-icon"></i>
+                        <input type="password" id="confirm-password-field" name="confirm_password" class="form-control-custom" placeholder="Re-enter password" required>
+                    </div>
+                </div>
+
+                <!-- Green Submit Button -->
+                <button type="submit" class="btn-sign-in-green">
+                    <span>Create Citizen Account</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+
+                <!-- Back to Login -->
+                <div class="login-register-prompt text-center mt-3">
+                    <span class="text-muted small">Already have an account? </span>
+                    <a href="{{ url_for('auth.login', role='citizen') }}" class="small text-decoration-none register-link">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

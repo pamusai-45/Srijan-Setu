@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Citizen Profile{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold text-dark mb-1">Citizen Profile Settings</h2>
+    <p class="text-muted small mb-0">Manage your verified citizen contact details and registered district location.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="content-card text-center p-4">
+            <div class="user-avatar-circle mx-auto mb-3" style="width: 72px; height: 72px; font-size: 1.8rem; background: var(--primary-forest); color: #ffffff;">
+                {{ current_user.initials }}
+            </div>
+            <h4 class="fw-bold text-dark mb-1">{{ current_user.full_name }}</h4>
+            <div class="text-muted small mb-3">{{ current_user.email }}</div>
+            <span class="jig-badge badge-status-validated text-uppercase mb-3">Verified Citizen Reporter</span>
+
+            <div class="p-3 bg-light rounded text-start small mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Registered District:</span>
+                    <span class="fw-bold text-dark">{{ current_user.district or 'Jharkhand' }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Phone Contact:</span>
+                    <span class="fw-bold text-dark">{{ current_user.phone or 'Not Provided' }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Total Challenges:</span>
+                    <span class="fw-bold text-success">{{ user_challenges_count }} filed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="content-card">
+            <div class="content-card-header">
+                <h3 class="content-card-title">
+                    <i class="bi bi-person-gear text-success"></i> Edit Personal Information
+                </h3>
+            </div>
+            <div class="content-card-body">
+                <form action="{{ url_for('citizen.profile') }}" method="POST">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Full Name</label>
+                            <input type="text" name="full_name" class="form-control-custom" value="{{ current_user.full_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Email Address (Read-only)</label>
+                            <input type="email" class="form-control-custom bg-light" value="{{ current_user.email }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Phone Number</label>
+                            <input type="text" name="phone" class="form-control-custom" value="{{ current_user.phone or '' }}" placeholder="+91 XXXXX XXXXX">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Primary District</label>
+                            <select name="district" class="form-select-custom">
+                                {% for dist in jharkhand_districts %}
+                                    <option value="{{ dist }}" {% if current_user.district == dist %}selected{% endif %}>{{ dist }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-jig-primary">
+                        <i class="bi bi-check2-circle"></i> Save Profile Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
